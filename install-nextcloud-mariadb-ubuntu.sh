@@ -33,7 +33,7 @@ fail2ban-client status nextcloud
 ufw status verbose
 }
 ### START ###
-apt install gnupg2 wget -y
+apt install gnupg2 wget curl -y
 ###prepare the server environment
 cd /etc/apt/sources.list.d
 echo "deb [arch=amd64] http://ppa.launchpad.net/ondrej/php/ubuntu $(lsb_release -cs) main" | tee php.list
@@ -45,7 +45,7 @@ curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo apt-key add -
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 4F4EA0AAE5267A6C
 apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8   
 update_and_clean
-apt install software-properties-common zip unzip screen curl git wget ffmpeg libfile-fcntllock-perl locate ghostscript tree htop -y
+apt install software-properties-common zip unzip screen git wget ffmpeg libfile-fcntllock-perl locate ghostscript tree htop -y
 apt remove nginx nginx-common nginx-full -y --allow-change-held-packages
 ###instal NGINX using TLSv1.3, OpenSSL 1.1.1
 update_and_clean
