@@ -305,7 +305,7 @@ return 301 \$scheme://\$host/remote.php/dav;
 #rewrite ^/.well-known/host-meta.json /public.php?service=host-meta-json last;
 client_max_body_size 10240M;
 location / {
-rewrite ^ /index.php\$request_uri;
+rewrite ^ /index.php;
 }
 location ~ ^/(?:build|tests|config|lib|3rdparty|templates|data)/ {
 deny all;
@@ -321,11 +321,15 @@ mp4;
 mp4_buffer_size 100M;
 mp4_max_buffer_size 1024M;
 fastcgi_split_path_info ^(.+?.php)(\/.*|)\$;
-include fastcgi_params; include php_optimization.conf;
-fastcgi_pass php-handler; fastcgi_param HTTPS on;
+$try_files $fastcgi_script_name =404;
+include fastcgi_params;
+include php_optimization.conf;
+fastcgi_pass php-handler;
+fastcgi_param HTTPS on;
 }
 location ~ ^\/(?:index|remote|public|cron|core\/ajax\/update|status|ocs\/v[12]|updater\/.+|oc[ms]-provider\/.+).php(?:$|\/) {
 fastcgi_split_path_info ^(.+?.php)(\/.*|)\$;
+$try_files $fastcgi_script_name =404;
 include fastcgi_params;
 include php_optimization.conf;
 fastcgi_pass php-handler;
