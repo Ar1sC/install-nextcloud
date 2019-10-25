@@ -271,6 +271,7 @@ mp4;
 mp4_buffer_size 100M;
 mp4_max_buffer_size 1024M;
 fastcgi_split_path_info ^(.+?.php)(\/.*|)\$;
+set \$path_info \$fastcgi_path_info;
 try_files \$fastcgi_script_name =404;
 include fastcgi_params;
 include php_optimization.conf;
@@ -279,6 +280,7 @@ fastcgi_param HTTPS on;
 }
 location ~ ^\/(?:index|remote|public|cron|core\/ajax\/update|status|ocs\/v[12]|updater\/.+|oc[ms]-provider\/.+).php(?:$|\/) {
 fastcgi_split_path_info ^(.+?.php)(\/.*|)\$;
+set \$path_info \$fastcgi_path_info;
 try_files \$fastcgi_script_name =404;
 include fastcgi_params;
 include php_optimization.conf;
