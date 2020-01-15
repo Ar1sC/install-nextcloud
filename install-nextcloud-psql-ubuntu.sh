@@ -33,7 +33,7 @@ fail2ban-client status nextcloud
 ufw status verbose
 }
 ### START ###
-apt install gnupg2 wget -y
+apt install gnupg2 wget curl -y
 ###prepare the server environment
 cd /etc/apt/sources.list.d
 echo "deb [arch=amd64] http://ppa.launchpad.net/ondrej/php/ubuntu $(lsb_release -cs) main" | tee php.list
@@ -46,7 +46,7 @@ apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74C
 curl -fsSL https://nginx.org/keys/nginx_signing.key | sudo apt-key add -
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 update_and_clean
-apt install software-properties-common zip unzip screen curl git wget ffmpeg libfile-fcntllock-perl locales-all locate ghostscript -y
+apt install software-properties-common zip unzip screen git wget ffmpeg libfile-fcntllock-perl locales-all locate ghostscript -y
 ###instal NGINX using TLSv1.3, OpenSSL 1.1.1
 apt remove nginx nginx-common nginx-full -y --allow-change-held-packages
 update_and_clean
@@ -254,7 +254,7 @@ return 301 \$scheme://\$host/remote.php/dav;
 #rewrite ^/.well-known/host-meta.json /public.php?service=host-meta-json last;
 client_max_body_size 10240M;
 location / {
-rewrite ^ /index.php\$request_uri;
+rewrite ^ /index.php;
 }
 location ~ ^/(?:build|tests|config|lib|3rdparty|templates|data)/ {
 deny all;
@@ -270,11 +270,17 @@ mp4;
 mp4_buffer_size 100M;
 mp4_max_buffer_size 1024M;
 fastcgi_split_path_info ^(.+?.php)(\/.*|)\$;
-include fastcgi_params; include php_optimization.conf;
-fastcgi_pass php-handler; fastcgi_param HTTPS on;
+set \$path_info \$fastcgi_path_info;
+try_files \$fastcgi_script_name =404;
+include fastcgi_params;
+include php_optimization.conf;
+fastcgi_pass php-handler;
+fastcgi_param HTTPS on;
 }
 location ~ ^\/(?:index|remote|public|cron|core\/ajax\/update|status|ocs\/v[12]|updater\/.+|oc[ms]-provider\/.+).php(?:$|\/) {
 fastcgi_split_path_info ^(.+?.php)(\/.*|)\$;
+set \$path_info \$fastcgi_path_info;
+try_files \$fastcgi_script_name =404;
 include fastcgi_params;
 include php_optimization.conf;
 fastcgi_pass php-handler;
@@ -367,6 +373,7 @@ add_header X-Permitted-Cross-Domain-Policies none;
 add_header X-Content-Type-Options "nosniff" always;
 add_header X-XSS-Protection "1; mode=block" always;
 add_header Referrer-Policy "no-referrer" always;
+add_header X-Frame-Options "SAMEORIGIN";
 EOF
 ###create a nginx optimization file
 touch /etc/nginx/optimization.conf
@@ -393,7 +400,7 @@ EOF
 touch /etc/nginx/php_optimization.conf
 cat <<EOF >/etc/nginx/php_optimization.conf
 fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
-fastcgi_param PATH_INFO \$fastcgi_path_info;
+fastcgi_param PATH_INFO \$path_info;
 fastcgi_param modHeadersAvailable true;
 fastcgi_param front_controller_active true;
 fastcgi_intercept_errors on;
@@ -533,8 +540,8 @@ touch /etc/fail2ban/filter.d/nextcloud.conf
 cat <<EOF >/etc/fail2ban/filter.d/nextcloud.conf
 [Definition]
 failregex=^{"reqId":".*","remoteAddr":".*","app":"core","message":"Login failed: '.*' \(Remote IP: '<HOST>'\)","level":2,"time":".*"}$
-            ^{"reqId":".*","level":2,"time":".*","remoteAddr":".*","app":"core".*","message":"Login failed: '.*' \(Remote IP: '<HOST>'\)".*}$
-            ^.*\"remoteAddr\":\"<HOST>\".*Trusted domain error.*\$
+          ^{"reqId":".*","level":2,"time":".*","remoteAddr":".*","user,:".*","app":"no app in context".*","method":".*","message":"Login failed: '.*' \(Remote IP: '<HOST>'\)".*}$
+          ^{"reqId":".*","level":2,"time":".*","remoteAddr":".*","user":".*","app":".*","method":".*","url":".*","message":"Login failed: .* \(Remote IP: <HOST>\).*}$
 EOF
 ###create a fail2ban Nextcloud jail
 touch /etc/fail2ban/jail.d/nextcloud.local
